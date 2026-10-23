@@ -140,19 +140,26 @@ Necesitas iniciar sesión y enviar la cookie de sesión y el token CSRF. En la i
 
 ```text
 OptiFlow_Dining/
-  docker-compose.yml         Orquestación de 3 servicios
-  .env.example               Variables de entorno sin secretos reales
-  scripts/generate_env.py    Generador de contraseñas seguras
-  config/salon.json          Distribución y nodos del ejemplo
+  docker-compose.yml         Orquestación de microservicios (Docker)
+  iniciar_local.bat          Script de inicio rápido local en Windows (sin Docker)
+  vista_previa.html          Vista previa interactiva navegable de todos los módulos
+  .env.example               Variables de entorno de ejemplo
+  scripts/generate_env.py    Generador de configuración inicial y claves
+  config/salon.json          Distribución y nodos del plano
   web/
-    optiflow/               Configuración Django
-    core/                   Roles, modelos, vistas REST, tests y migraciones
-    templates/              Interfaces de inicio, registro, panel y módulos
-    static/css/app.css       Estilos responsive azul/naranja
-    static/js/app.js         Interacción de mapas, rutas, zonas y OpenCV
+    optiflow/               Configuración y settings de Django
+    core/                   Modelos, vistas, servicios locales y API REST
+    templates/              Plantillas HTML modulares (limpias de CSS y JS incrustados)
+    static/
+      css/
+        app.css             Estilos globales y componentes principales
+        vista_previa.css    Estilos específicos para la vista previa interactiva
+      js/
+        app.js              Lógica de cliente, formularios, rutas y OpenCV en Django
+        vista_previa.js     Lógica completa de simulación modular (Dijkstra, canvas, roles)
   services/
-    routing/                 Microservicio de trayectorias
-    vision/                  Microservicio de OpenCV
+    routing/                 Microservicio FastAPI de trayectorias
+    vision/                  Microservicio FastAPI de análisis OpenCV
 ```
 
 ## 8. Relación con las entregas adjuntas

@@ -1,0 +1,249 @@
+/* ========================================================
+   OptiFlow Dining · Estilos para Vista Previa Interactiva
+   ======================================================== */
+
+.preview-tag {
+  position: fixed;
+  right: 15px;
+  top: 90px;
+  z-index: 100;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #102d55, #1e457e);
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(17, 38, 69, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.preview-tag .pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #25d49a;
+  box-shadow: 0 0 0 3px rgba(37, 212, 154, 0.35);
+}
+
+.role-badge-select {
+  background: #f0f4fa;
+  border: 1px solid #d8e2ee;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #17325c;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-badge-select select {
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: #10294e;
+  cursor: pointer;
+  outline: none;
+  min-height: auto;
+  padding: 0;
+  width: auto;
+}
+
+.role-badge-select .ic {
+  width: 14px;
+  height: 14px;
+}
+
+.apartado-view {
+  display: none;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.apartado-view.active-view {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quick-card {
+  cursor: pointer;
+}
+
+/* Estados visuales de mesas en el plano */
+.table-disponible {
+  stroke: #d9e2ed !important;
+  fill: #ffffff !important;
+}
+
+.table-activa {
+  stroke: #3b82f6 !important;
+  fill: #eff6ff !important;
+}
+
+.table-ocupada {
+  stroke: #f97316 !important;
+  fill: #fff7ed !important;
+}
+
+.role-lock-banner {
+  background: #fff8eb;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sample-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-sample {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 11px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sample:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Tarjeta de credenciales demo para Login */
+.demo-credentials-card {
+  background: #f0f5ff;
+  border: 1px solid #d0e0fc;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  color: #1e3a66;
+}
+
+.demo-credentials-header {
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-credentials-header .ic {
+  width: 15px;
+  height: 15px;
+}
+
+.demo-credentials-box {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0;
+  background: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.demo-code {
+  color: #0f172a;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.btn-autofill {
+  background: #2563eb;
+  color: #ffffff;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-autofill:hover {
+  background: #1d4ed8;
+}
+
+.btn-topbar-logout {
+  min-height: 30px;
+  padding: 4px 11px;
+  font-size: 11px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-topbar-logout .ic {
+  width: 13px;
+  height: 13px;
+}
+
+/* Clases utilitarias de estructura */
+.view-login-screen {
+  min-height: 100vh;
+  background: #07162e;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.vision-canvas-container {
+  position: relative;
+  background: #0d1829;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.vision-canvas-display {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mt-14 {
+  margin-top: 14px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}

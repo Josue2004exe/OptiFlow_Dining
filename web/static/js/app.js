@@ -62,6 +62,7 @@
   $('#menu-trigger')?.addEventListener('click',()=>$('#sidebar')?.classList.toggle('open'));
   document.addEventListener('click',e=>{if(!e.target.closest('.sidebar')&&!e.target.closest('#menu-trigger'))$('#sidebar')?.classList.remove('open');});
   $$('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=btn.parentElement.querySelector('input');input.type=input.type==='password'?'text':'password';btn.textContent=input.type==='password'?'◉':'○';}));
+  $('#btn-autofill-admin')?.addEventListener('click',()=>{const u=$('#id_username');const p=$('#id_password');if(u)u.value='admin';if(p)p.value='1234';});
   // Route planner (uses independent FastAPI microservice through Django).
   const layout=getLayout();
   if($('#floor-plan')) floorPlan(layout,[],null,[]);
