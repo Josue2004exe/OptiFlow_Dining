@@ -133,7 +133,76 @@
   </defs>
 </svg>
 
-<div class="shell">
+<!-- ======================================================== -->
+<!-- PANTALLA DE INICIO DE SESIÓN (LOGIN)                     -->
+<!-- ======================================================== -->
+<div id="view-login" style="display:none;min-height:100vh;background:#07162e;">
+  <div class="auth-layout">
+    <div class="auth-hero">
+      <a class="brand" href="javascript:void(0)" onclick="handleLoginSubmit(event)">
+        <span class="brand-mark">◎</span>
+        <span>OPTIFLOW<small>DINING</small></span>
+      </a>
+      <div class="auth-hero-content">
+        <div class="eyebrow"><span class="signal-dot"></span> PLATAFORMA DE GESTIÓN OPERATIVA</div>
+        <h1>Haz que cada<br><em>movimiento cuente.</em></h1>
+        <p>Un entorno más inteligente para que tu equipo trabaje conectado, seguro y eficiente.</p>
+        <div class="auth-quote">“Cada recorrido importa. Cada segundo suma.”</div>
+      </div>
+      <div class="auth-hero-footer">OPTIFLOW DINING <span>© 2026</span></div>
+    </div>
+    
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div class="auth-badge">◈ ACCESO SEGURO</div>
+        <h2>Bienvenido de nuevo</h2>
+        <p>Ingresa tus credenciales para continuar.</p>
+
+        <div class="demo-credentials-card" style="background:#f0f5ff;border:1px solid #d0e0fc;border-radius:10px;padding:14px;margin-bottom:18px;font-size:12px;color:#1e3a66;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            <svg class="ic" style="width:15px;height:15px;"><use href="#i-users"/></svg>
+            Credenciales de acceso predeterminadas:
+          </div>
+          <div style="display:flex;gap:14px;margin:8px 0;background:#ffffff;padding:8px 12px;border-radius:6px;border:1px solid #e2e8f0;">
+            <div>Usuario: <strong style="color:#0f172a;font-family:monospace;font-size:13px;">admin</strong></div>
+            <div>Contraseña: <strong style="color:#0f172a;font-family:monospace;font-size:13px;">1234</strong></div>
+          </div>
+          <button type="button" onclick="document.getElementById('login-username').value='admin';document.getElementById('login-password').value='1234';" style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">
+            Autocompletar admin / 1234
+          </button>
+        </div>
+
+        <form class="auth-form" onsubmit="handleLoginSubmit(event)">
+          <label for="login-username">Nombre de usuario</label>
+          <input id="login-username" type="text" value="admin" required autocomplete="username">
+          
+          <label for="login-password">Contraseña</label>
+          <div class="password-field">
+            <input id="login-password" type="password" value="1234" required autocomplete="current-password">
+            <button type="button" onclick="togglePasswordVisibility('login-password', this)" aria-label="Mostrar contraseña">◉</button>
+          </div>
+
+          <div id="login-error-msg" class="field-error" style="display:none;margin-top:10px;"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:16px;">
+            Iniciar sesión <span>→</span>
+          </button>
+        </form>
+
+        <div class="auth-divider"><span>O abrir servidor Django</span></div>
+        <a class="btn btn-outline btn-full" href="http://127.0.0.1:8000/login/" target="_blank" style="text-align:center;">
+          Abrir Login oficial en Django (http://127.0.0.1:8000/login/) ↗
+        </a>
+        <p class="auth-caption">Acceso administrativo predeterminado: admin / 1234.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- PANTALLA PRINCIPAL DE LA APLICACIÓN                     -->
+<!-- ======================================================== -->
+<div id="view-app" class="shell">
   <!-- Barra lateral de navegación -->
   <aside class="sidebar" id="sidebar">
     <a class="brand" href="javascript:void(0)" onclick="switchApartado('dashboard')">
@@ -178,7 +247,7 @@
     </div>
 
     <div class="sidebar-logout">
-      <button class="logout-button" onclick="toast('Sesión de demostración activa.', 'success')">
+      <button class="logout-button" type="button" onclick="handleLogout()" title="Cerrar sesión e ir a la pantalla de login">
         <svg class="ic"><use href="#i-logout"/></svg> Cerrar sesión
       </button>
     </div>
@@ -205,6 +274,9 @@
             <option value="admin">Administrador</option>
           </select>
         </div>
+        <button type="button" class="btn btn-outline btn-small" onclick="handleLogout()" style="min-height:30px;padding:4px 11px;font-size:11px;border-radius:18px;display:inline-flex;align-items:center;gap:6px;" title="Cerrar sesión">
+          <svg class="ic" style="width:13px;height:13px;"><use href="#i-logout"/></svg> Cerrar sesión
+        </button>
         <span class="topbar-divider"></span>
         <span class="online-dot"></span>
         <span class="system-online">Sistema operativo</span>
@@ -1549,6 +1621,77 @@
   }
 
   // ==========================================
+  // MANEJO DE SESIÓN Y LOGIN
+  // ==========================================
+  window.handleLogout = function() {
+    const appEl = document.getElementById('view-app');
+    const loginEl = document.getElementById('view-login');
+    if (appEl && loginEl) {
+      appEl.style.display = 'none';
+      loginEl.style.display = 'block';
+    }
+    const err = document.getElementById('login-error-msg');
+    if (err) err.style.display = 'none';
+    toast('Has cerrado sesión. Puedes ingresar con admin y 1234.', 'success');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.handleLoginSubmit = function(e) {
+    if (e) e.preventDefault();
+    const uInput = document.getElementById('login-username');
+    const pInput = document.getElementById('login-password');
+    const err = document.getElementById('login-error-msg');
+
+    const username = (uInput?.value || '').trim().toLowerCase();
+    const password = (pInput?.value || '').trim();
+
+    const usersMap = {
+      admin: { role: 'admin', name: 'Administrador', avatar: 'A' },
+      capitan: { role: 'capitan', name: 'Capitán demo', avatar: 'C' },
+      mesero: { role: 'mesero', name: 'Mesero demo', avatar: 'M' },
+      gerente: { role: 'gerente', name: 'Gerente demo', avatar: 'G' }
+    };
+
+    if (usersMap[username] && (password === '1234' || password.length > 0)) {
+      if (err) err.style.display = 'none';
+      const user = usersMap[username];
+      
+      const sel = document.getElementById('role-select');
+      if (sel) sel.value = user.role;
+      onRoleChange(user.role);
+
+      const appEl = document.getElementById('view-app');
+      const loginEl = document.getElementById('view-login');
+      if (appEl && loginEl) {
+        loginEl.style.display = 'none';
+        appEl.style.display = 'flex';
+      }
+
+      switchApartado('dashboard');
+      toast(`¡Bienvenido de nuevo, ${user.name}!`, 'success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      if (err) {
+        err.style.display = 'block';
+        err.textContent = 'Usuario o contraseña incorrectos. Utiliza el usuario "admin" y contraseña "1234".';
+      }
+      toast('Credenciales incorrectas.', 'error');
+    }
+  };
+
+  window.togglePasswordVisibility = function(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (btn) btn.textContent = '○';
+    } else {
+      input.type = 'password';
+      if (btn) btn.textContent = '◉';
+    }
+  };
+
+  // ==========================================
   // INICIALIZACIÓN AL CARGAR
   // ==========================================
   function init() {
@@ -1558,6 +1701,10 @@
     renderTablesControls();
     renderFloorPlan('svg-routes-plan', [], 'mesa08');
     renderFloorPlan('svg-layout-plan', [], null);
+
+    if (window.location.hash === '#login') {
+      handleLogout();
+    }
 
     // Permitir arrastrar archivos a la zona de subida
     const dropzone = document.getElementById('vision-dropzone');
