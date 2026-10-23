@@ -341,9 +341,9 @@
     const btnRecalc = document.getElementById('btn-recalculate');
     const btnComp = document.getElementById('btn-complete-route');
 
-    if (fb) fb.style.display = 'block';
-    if (actions) actions.style.display = 'block';
-    if (btnComp) btnComp.style.display = 'block';
+    if (fb) { fb.classList.remove('is-hidden'); fb.style.display = 'block'; }
+    if (actions) { actions.classList.remove('is-hidden'); actions.style.display = 'block'; }
+    if (btnComp) { btnComp.classList.remove('is-hidden'); btnComp.style.display = 'block'; }
 
     if (result.congested) {
       if (fb) {
@@ -399,8 +399,7 @@
       state.routesHistory[0].completed = true;
     }
     const actions = document.getElementById('route-actions-box');
-    const fb = document.getElementById('route-feedback-box');
-    if (actions) actions.style.display = 'none';
+    if (actions) { actions.classList.add('is-hidden'); actions.style.display = 'none'; }
     if (fb) {
       fb.className = 'route-feedback success';
       fb.innerHTML = '✓ <strong>¡Tarea de servicio finalizada y registrada con éxito!</strong>';
@@ -461,12 +460,14 @@
     const alertBanner = document.getElementById('saturation-alert-banner');
     if (alertBanner) {
       if (critZone) {
+        alertBanner.classList.remove('is-hidden');
         alertBanner.style.display = 'flex';
         const titleEl = document.getElementById('saturation-alert-title');
         const descEl = document.getElementById('saturation-alert-desc');
         if (titleEl) titleEl.textContent = `Congestión crítica · Nodo de la Zona ${critZone.code}`;
         if (descEl) descEl.textContent = `Permanencia registrada: ${critZone.dwell_minutes.toFixed(1)} minutos. Supera el umbral de 4 minutos definido en los requerimientos.`;
       } else {
+        alertBanner.classList.add('is-hidden');
         alertBanner.style.display = 'none';
       }
     }
@@ -761,8 +762,8 @@
       const zoneBox = document.getElementById('vision-zone-counts');
       const noteEl = document.getElementById('vision-note-text');
 
-      if (placeholder) placeholder.style.display = 'none';
-      if (resultsBox) resultsBox.style.display = 'block';
+      if (placeholder) { placeholder.classList.add('is-hidden'); placeholder.style.display = 'none'; }
+      if (resultsBox) { resultsBox.classList.remove('is-hidden'); resultsBox.style.display = 'block'; }
       if (peopleCountEl) peopleCountEl.textContent = detections.length;
 
       if (zoneBox) {
@@ -839,11 +840,16 @@
     const appEl = document.getElementById('view-app');
     const loginEl = document.getElementById('view-login');
     if (appEl && loginEl) {
+      appEl.classList.add('is-hidden');
       appEl.style.display = 'none';
+      loginEl.classList.remove('is-hidden');
       loginEl.style.display = 'block';
     }
     const err = document.getElementById('login-error-msg');
-    if (err) err.style.display = 'none';
+    if (err) {
+      err.classList.add('is-hidden');
+      err.style.display = 'none';
+    }
     toast('Has cerrado sesión. Puedes ingresar con admin y 1234.', 'success');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -865,7 +871,10 @@
     };
 
     if (usersMap[username] && (password === '1234' || password.length > 0)) {
-      if (err) err.style.display = 'none';
+      if (err) {
+        err.classList.add('is-hidden');
+        err.style.display = 'none';
+      }
       const user = usersMap[username];
       
       const sel = document.getElementById('role-select');
@@ -875,7 +884,9 @@
       const appEl = document.getElementById('view-app');
       const loginEl = document.getElementById('view-login');
       if (appEl && loginEl) {
+        loginEl.classList.add('is-hidden');
         loginEl.style.display = 'none';
+        appEl.classList.remove('is-hidden');
         appEl.style.display = 'flex';
       }
 
@@ -884,6 +895,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (err) {
+        err.classList.remove('is-hidden');
         err.style.display = 'block';
         err.textContent = 'Usuario o contraseña incorrectos. Utiliza el usuario "admin" y contraseña "1234".';
       }
