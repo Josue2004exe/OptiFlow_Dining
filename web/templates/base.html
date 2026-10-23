@@ -1,0 +1,44 @@
+{% load static %}<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ page_title }} · OptiFlow Dining</title><link rel="stylesheet" href="{% static 'css/app.css' %}"><meta name="theme-color" content="#07142b"><meta name="csrf-token" content="{{ csrf_token }}">
+</head><body class="app-body">
+<svg width="0" height="0" class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v7c0 2 2 3 4 3h6M8 6h7c2 0 3 1 3 3v6"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h17M8 16v-5M13 16V7M18 16v-9"/></symbol>
+<symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 10v11M15 3v7"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m4-13a3 3 0 0 1 0 6m-1 3a5 5 0 0 1 3 4"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m4-4 4-4-4-4m4 4H9"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6m2-9v4h-4"/></symbol>
+</defs></svg>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+ <a class="brand" href="{% url 'dashboard' %}" aria-label="OptiFlow Dining, inicio"><span class="brand-mark">◎</span><span>OPTIFLOW<small>DINING</small></span></a>
+ <div class="workspace"><span class="workspace-icon">O</span><span><strong>Salón principal</strong><small>Espacio de trabajo</small></span><span class="workspace-caret">⌄</span></div>
+ <div class="nav-label">MENÚ PRINCIPAL</div>
+ <nav class="sidebar-nav" aria-label="Principal">
+  <a href="{% url 'dashboard' %}" class="nav-link {% if active == 'dashboard' %}active{% endif %}"><svg class="ic"><use href="#i-grid"/></svg>Panel principal</a>
+  {% if role == 'mesero' or role == 'capitan' or role == 'admin' %}<a href="{% url 'routes' %}" class="nav-link {% if active == 'routes' %}active{% endif %}"><svg class="ic"><use href="#i-route"/></svg>Rutas de servicio</a>{% endif %}
+  {% if role == 'capitan' or role == 'gerente' or role == 'admin' %}<a href="{% url 'saturation' %}" class="nav-link {% if active == 'saturation' %}active{% endif %}"><svg class="ic"><use href="#i-activity"/></svg>Saturación del salón</a><a href="{% url 'analytics' %}" class="nav-link {% if active == 'analytics' %}active{% endif %}"><svg class="ic"><use href="#i-chart"/></svg>Indicadores</a>{% endif %}
+  {% if role == 'capitan' or role == 'admin' %}<a href="{% url 'layout' %}" class="nav-link {% if active == 'layout' %}active{% endif %}"><svg class="ic"><use href="#i-layout"/></svg>Plano y mesas</a><a href="{% url 'vision' %}" class="nav-link {% if active == 'vision' %}active{% endif %}"><svg class="ic"><use href="#i-eye"/></svg>Análisis OpenCV</a>{% endif %}
+ </nav>
+ <div class="sidebar-spacer"></div>
+ <div class="help-card"><div class="help-icon">✦</div><strong>Servicio más inteligente</strong><p>Rutas optimizadas y un salón organizado para cada turno.</p></div>
+ <form method="post" action="{% url 'logout' %}" class="sidebar-logout">{% csrf_token %}<button class="logout-button" type="submit"><svg class="ic"><use href="#i-logout"/></svg>Cerrar sesión</button></form>
+</aside>
+<div class="workspace-main">
+ <header class="topbar"><div class="topbar-left"><button type="button" class="menu-trigger" id="menu-trigger" aria-label="Abrir menú">☰</button><span class="crumb">OptiFlow Dining</span><span class="crumb-separator">/</span><strong>{{ page_title }}</strong></div><div class="topbar-right"><span class="online-dot"></span><span class="system-online">Sistema operativo</span><span class="topbar-divider"></span><span class="avatar">{{ request.user.username|first|upper }}</span><span class="account-name">{{ display_name|default:request.user.username }}</span></div></header>
+ <main class="main-content">
+ {% if messages %}<div class="messages">{% for message in messages %}<div class="notice notice-success">{{ message }}</div>{% endfor %}</div>{% endif %}
+ {% block content %}{% endblock %}
+ </main><footer class="footer"><span>© 2026 OptiFlow Dining</span><span>Proyecto académico · Construcción de Software</span></footer>
+</div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="{% static 'js/app.js' %}" defer></script>{% block scripts %}{% endblock %}
+</body></html>

@@ -1,0 +1,36 @@
+OPTIFLOW DINING · CÓMO ABRIR EL PROYECTO
+========================================
+
+1. DESCOMPRIME OptiFlow_Dining.zip.
+
+2. INSTALA Docker Desktop si todavía no lo tienes.
+   https://www.docker.com/products/docker-desktop/
+
+3. ABRE una terminal en la carpeta OptiFlow_Dining:
+
+   python scripts/generate_env.py
+   docker compose up --build -d
+
+4. ENTRA a http://localhost:8000
+   Haz clic en CREAR CUENTA, regístrate y prueba las rutas.
+
+5. PARA PROBAR LOS MÓDULOS DE CAPITÁN Y GERENTE:
+
+   docker compose exec web python manage.py createsuperuser
+
+   Abre http://localhost:8000/admin/ y cambia el rol
+   del usuario desde Profiles.
+
+6. PARA DETENER LOS SERVICIOS:
+
+   docker compose down
+
+ARCHIVOS ÚTILES:
+- vista_previa.html: abre una vista visual estática del diseño, sin backend.
+- README.md: guía completa y despliegue opcional en AWS.
+- web/: código de Django + HTML/CSS/JavaScript.
+- services/routing/: microservicio de rutas.
+- services/vision/: microservicio OpenCV.
+
+NOTA: el código no se encuentra publicado todavía en un servidor AWS.
+Amazon S3 se puede activar con la variable AWS_S3_BUCKET y un rol IAM.

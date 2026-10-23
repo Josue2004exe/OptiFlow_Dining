@@ -1,0 +1,16 @@
+{
+  "name": "Salón principal", "columns": 5, "rows": 5,
+  "origins": [{"id":"cocina","label":"Zona de cocina","node":"0,2"},{"id":"entrada","label":"Entrada principal","node":"0,4"}],
+  "tables": [
+    {"id":"mesa01","label":"Mesa 01","node":"1,1","seats":4,"zone":"A"},
+    {"id":"mesa02","label":"Mesa 02","node":"2,1","seats":4,"zone":"B"},
+    {"id":"mesa03","label":"Mesa 03","node":"3,1","seats":2,"zone":"C"},
+    {"id":"mesa04","label":"Mesa 04","node":"4,1","seats":4,"zone":"C"},
+    {"id":"mesa05","label":"Mesa 05","node":"1,3","seats":2,"zone":"A"},
+    {"id":"mesa06","label":"Mesa 06","node":"2,3","seats":4,"zone":"B"},
+    {"id":"mesa07","label":"Mesa 07","node":"3,3","seats":2,"zone":"C"},
+    {"id":"mesa08","label":"Mesa 08","node":"4,3","seats":6,"zone":"C"}
+  ],
+  "zones":[{"id":"A","label":"Zona A","columns":[0,1]}, {"id":"B","label":"Zona B","columns":[2]}, {"id":"C","label":"Zona C","columns":[3,4]}],
+  "demo_congestion_nodes":["2,2","3,2"]
+}

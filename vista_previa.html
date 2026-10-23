@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OptiFlow Dining · Vista previa interactiva de apartados</title>
+  <link rel="stylesheet" href="web/static/css/app.css">
+  <style>
+    .preview-tag {
+      position: fixed;
+      right: 15px;
+      top: 90px;
+      z-index: 100;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #102d55, #1e457e);
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(17, 38, 69, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .preview-tag .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #25d49a;
+      box-shadow: 0 0 0 3px rgba(37, 212, 154, 0.35);
+    }
+    .role-badge-select {
+      background: #f0f4fa;
+      border: 1px solid #d8e2ee;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #17325c;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .role-badge-select select {
+      border: 0;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 700;
+      color: #10294e;
+      cursor: pointer;
+      outline: none;
+      min-height: auto;
+      padding: 0;
+      width: auto;
+    }
+    .apartado-view {
+      display: none;
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+    .apartado-view.active-view {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .quick-card {
+      cursor: pointer;
+    }
+    .table-disponible { stroke: #d9e2ed !important; fill: #ffffff !important; }
+    .table-activa { stroke: #3b82f6 !important; fill: #eff6ff !important; }
+    .table-ocupada { stroke: #f97316 !important; fill: #fff7ed !important; }
+    .role-lock-banner {
+      background: #fff8eb;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .sample-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-sample {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      font-size: 11px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-sample:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body class="app-body">
+
+<div class="preview-tag">
+  <span class="pulse"></span>
+  <span>VISTA INTERACTIVA · TODOS LOS APARTADOS ACTIVOS</span>
+</div>
+
+<!-- SVG Sprite -->
+<svg width="0" height="0" class="svg-sprite" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v7c0 2 2 3 4 3h6M8 6h7c2 0 3 1 3 3v6"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h17M8 16v-5M13 16V7M18 16v-9"/></symbol>
+    <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 10v11M15 3v7"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m4-13a3 3 0 0 1 0 6m-1 3a5 5 0 0 1 3 4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m4-4 4-4-4-4m4 4H9"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6m2-9v4h-4"/></symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+  <!-- Barra lateral de navegación -->
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="javascript:void(0)" onclick="switchApartado('dashboard')">
+      <span class="brand-mark">◎</span>
+      <span>OPTIFLOW<small>DINING</small></span>
+    </a>
+    
+    <div class="workspace">
+      <span class="workspace-icon">O</span>
+      <span><strong>Salón principal</strong><small>Espacio de trabajo</small></span>
+      <span class="workspace-caret">⌄</span>
+    </div>
+
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <a class="nav-link active" data-section="dashboard" onclick="switchApartado('dashboard')">
+        <svg class="ic"><use href="#i-grid"/></svg>Panel principal
+      </a>
+      <a class="nav-link" data-section="routes" onclick="switchApartado('routes')">
+        <svg class="ic"><use href="#i-route"/></svg>Rutas de servicio
+      </a>
+      <a class="nav-link" data-section="saturation" onclick="switchApartado('saturation')">
+        <svg class="ic"><use href="#i-activity"/></svg>Saturación del salón
+      </a>
+      <a class="nav-link" data-section="analytics" onclick="switchApartado('analytics')">
+        <svg class="ic"><use href="#i-chart"/></svg>Indicadores
+      </a>
+      <a class="nav-link" data-section="layout" onclick="switchApartado('layout')">
+        <svg class="ic"><use href="#i-layout"/></svg>Plano y mesas
+      </a>
+      <a class="nav-link" data-section="vision" onclick="switchApartado('vision')">
+        <svg class="ic"><use href="#i-eye"/></svg>Análisis OpenCV
+      </a>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="help-card">
+      <div class="help-icon">✦</div>
+      <strong>Servicio más inteligente</strong>
+      <p>Rutas optimizadas con Dijkstra y salón organizado para cada turno.</p>
+    </div>
+
+    <div class="sidebar-logout">
+      <button class="logout-button" onclick="toast('Sesión de demostración activa.', 'success')">
+        <svg class="ic"><use href="#i-logout"/></svg> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Área principal -->
+  <div class="workspace-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="menu-trigger" id="menu-trigger" aria-label="Abrir menú" onclick="toggleSidebar()">☰</button>
+        <span class="crumb">OptiFlow Dining</span>
+        <span class="crumb-separator">/</span>
+        <strong id="breadcrumb-title">Panel principal</strong>
+      </div>
+      <div class="topbar-right">
+        <!-- Selector interactivo de rol para probar permisos -->
+        <div class="role-badge-select">
+          <svg class="ic" style="width:14px;height:14px;"><use href="#i-users"/></svg>
+          <span>Rol:</span>
+          <select id="role-select" onchange="onRoleChange(this.value)" title="Cambiar rol para probar permisos">
+            <option value="capitan" selected>Capitán de meseros</option>
+            <option value="mesero">Mesero / Runner</option>
+            <option value="gerente">Gerente general</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <span class="topbar-divider"></span>
+        <span class="online-dot"></span>
+        <span class="system-online">Sistema operativo</span>
+        <span class="topbar-divider"></span>
+        <span class="avatar" id="user-avatar">C</span>
+        <span class="account-name" id="user-name">Capitán demo</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 1: PANEL PRINCIPAL (DASHBOARD)                   -->
+      <!-- ======================================================== -->
+      <section id="section-dashboard" class="apartado-view active-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">PANEL DE CONTROL <span>·</span> SALÓN PRINCIPAL</div>
+            <h1>¡Hola, <span id="welcome-name">Capitán</span>! <span class="wave">✦</span></h1>
+            <p>Todo lo que necesitas para mantener el servicio en movimiento.</p>
+          </div>
+          <div class="date-chip">◷ Octubre 2026</div>
+        </div>
+
+        <div class="welcome-banner">
+          <div class="banner-copy">
+            <span class="banner-tag">✧ TU ESPACIO DE TRABAJO</span>
+            <h2>El mejor servicio empieza<br>con una buena ruta.</h2>
+            <p>Organiza tu operación y consulta el estado del salón en tiempo real.</p>
+            <a class="btn btn-primary" onclick="switchApartado('routes')">Consultar rutas <span>→</span></a>
+          </div>
+          <div class="banner-graphic">
+            <div class="banner-ring r1"></div>
+            <div class="banner-ring r2"></div>
+            <div class="banner-ring r3"></div>
+            <span class="banner-pin">⌁</span>
+            <span class="banner-path">·······↗</span>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Resumen de operación</h2>
+            <p>Indicadores basados en registros actuales del sistema</p>
+          </div>
+          <span class="subtle-link">Datos del salón</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon orange"><svg class="ic"><use href="#i-route"/></svg></span>
+            <div class="stat-value" id="dash-routes-count">0</div>
+            <div class="stat-label">Rutas consultadas</div>
+            <small>Solicitudes registradas</small>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon red"><svg class="ic"><use href="#i-alert"/></svg></span>
+            <div class="stat-value" id="dash-critical-count">1</div>
+            <div class="stat-label">Zonas críticas</div>
+            <small>De 3 zonas supervisadas</small>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon blue"><svg class="ic"><use href="#i-refresh"/></svg></span>
+            <div class="stat-value" id="dash-recalculated-count">0</div>
+            <div class="stat-label">Rutas recalculadas</div>
+            <small>Alternativas consultadas</small>
+          </div>
+        </div>
+
+        <div class="section-heading section-heading-spaced">
+          <div>
+            <h2>Accesos rápidos a módulos</h2>
+            <p>Haz clic en cualquier apartado para abrirlo</p>
+          </div>
+        </div>
+
+        <div class="quick-grid">
+          <div class="quick-card" onclick="switchApartado('routes')">
+            <span class="quick-icon"><svg class="ic"><use href="#i-route"/></svg></span>
+            <strong>Consultar rutas</strong>
+            <p>Encuentra el mejor recorrido a cada mesa evitando congestión.</p>
+            <span class="quick-action">Abrir módulo <b>↗</b></span>
+          </div>
+          <div class="quick-card" onclick="switchApartado('saturation')">
+            <span class="quick-icon rose"><svg class="ic"><use href="#i-activity"/></svg></span>
+            <strong>Saturación del salón</strong>
+            <p>Detecta cuellos de botella y supervisa tiempos de permanencia.</p>
+            <span class="quick-action">Abrir módulo <b>↗</b></span>
+          </div>
+          <div class="quick-card" onclick="switchApartado('analytics')">
+            <span class="quick-icon purple"><svg class="ic"><use href="#i-chart"/></svg></span>
+            <strong>Indicadores</strong>
+            <p>Analiza el movimiento, traslados y tareas completadas.</p>
+            <span class="quick-action">Abrir módulo <b>↗</b></span>
+          </div>
+          <div class="quick-card" onclick="switchApartado('vision')">
+            <span class="quick-icon blue"><svg class="ic"><use href="#i-eye"/></svg></span>
+            <strong>Visión con OpenCV</strong>
+            <p>Procesa fotografías para estimar presencia y distribución por zona.</p>
+            <span class="quick-action">Abrir módulo <b>↗</b></span>
+          </div>
+        </div>
+
+        <div class="panel-card activity-card">
+          <div class="card-heading">
+            <h3>Estado de las zonas</h3>
+            <span class="micro-label">NIVELES ACTUALES</span>
+          </div>
+          <div class="zones-overview" id="dash-zones-list">
+            <!-- Rellenado por JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 2: RUTAS DE SERVICIO (M2)                        -->
+      <!-- ======================================================== -->
+      <section id="section-routes" class="apartado-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">M2 · MOTOR DE RUTEO (DIJKSTRA)</div>
+            <h1>Rutas de servicio <span class="heading-accent">↗</span></h1>
+            <p>Selecciona el punto de origen y la mesa destino para trazar el trayecto óptimo.</p>
+          </div>
+          <span class="header-pill">◉ Ruteo operativo</span>
+        </div>
+
+        <div class="two-column">
+          <section class="panel-card route-controls">
+            <div class="card-heading">
+              <div>
+                <h2>Nueva tarea</h2>
+                <p>Configura tu recorrido de servicio</p>
+              </div>
+              <span class="step-bubble">01</span>
+            </div>
+
+            <form id="route-form" onsubmit="handleRouteSubmit(event)">
+              <label for="route-origin">Punto de origen</label>
+              <select id="route-origin">
+                <option value="cocina" selected>Zona de cocina (0,2)</option>
+                <option value="entrada">Entrada principal (0,4)</option>
+              </select>
+
+              <label for="route-destination">Mesa de destino</label>
+              <select id="route-destination">
+                <option value="mesa01">Mesa 01 · 4 personas (Zona A)</option>
+                <option value="mesa02">Mesa 02 · 4 personas (Zona B)</option>
+                <option value="mesa03">Mesa 03 · 2 personas (Zona C)</option>
+                <option value="mesa04">Mesa 04 · 4 personas (Zona C)</option>
+                <option value="mesa05">Mesa 05 · 2 personas (Zona A)</option>
+                <option value="mesa06">Mesa 06 · 4 personas (Zona B)</option>
+                <option value="mesa07">Mesa 07 · 2 personas (Zona C)</option>
+                <option value="mesa08" selected>Mesa 08 · 6 personas (Zona C)</option>
+              </select>
+
+              <label for="route-task-type">Tipo de servicio</label>
+              <select id="route-task-type">
+                <option value="entrega">Entrega de comida</option>
+                <option value="retiro">Retiro de vajilla</option>
+              </select>
+
+              <div class="route-tip">
+                <svg class="ic"><use href="#i-eye"/></svg>
+                <span>El algoritmo Dijkstra calcula la ruta en la red 5×5 y detecta congestión registrada en tiempo real.</span>
+              </div>
+
+              <button id="btn-calc-route" class="btn btn-primary btn-full" type="submit">
+                Calcular mejor ruta <span>→</span>
+              </button>
+            </form>
+
+            <div id="route-feedback-box" class="route-feedback" style="display:none"></div>
+
+            <div class="route-actions" id="route-actions-box" style="display:none">
+              <button id="btn-recalculate" class="btn btn-warning btn-full" type="button" onclick="handleReroute()">
+                ↻ Recalcular ruta alternativa
+              </button>
+              <button id="btn-complete-route" class="btn btn-success btn-full" type="button" onclick="handleCompleteRoute()">
+                ✓ Finalizar tarea
+              </button>
+              <button class="btn btn-outline btn-full" type="button" onclick="switchApartado('dashboard')">
+                Volver al panel
+              </button>
+            </div>
+          </section>
+
+          <section class="panel-card map-card">
+            <div class="card-heading">
+              <div>
+                <h2>Mapa del salón</h2>
+                <p>Plano topológico 5×5 · Recorrido interactivo</p>
+              </div>
+              <span class="map-legend"><i></i> Trayecto activo</span>
+            </div>
+            <div class="map-surface">
+              <svg id="svg-routes-plan" class="floor-plan" viewBox="0 0 960 610" role="img" aria-label="Plano de mesas"></svg>
+            </div>
+            <div class="map-footer">
+              <div><span class="legend-dot legend-regular"></span>Zona libre</div>
+              <div><span class="legend-dot legend-alert"></span>Congestión (2,2 / 3,2)</div>
+              <div><span class="legend-line"></span>Ruta recomendada</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="panel-card activity-card">
+          <div class="card-heading">
+            <h3>Mis consultas recientes</h3>
+            <span class="micro-label">HISTORIAL EN TIEMPO REAL</span>
+          </div>
+          <div class="simple-table-wrapper">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>Destino</th>
+                  <th>Servicio</th>
+                  <th>Distancia</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="routes-history-tbody">
+                <!-- Rellenado por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 3: SATURACIÓN DEL SALÓN (M3)                     -->
+      <!-- ======================================================== -->
+      <section id="section-saturation" class="apartado-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">M3 · CONTROL DE CONGESTIÓN</div>
+            <h1>Saturación del salón</h1>
+            <p>Supervisa niveles de ocupación, tiempos de permanencia y umbrales de alerta.</p>
+          </div>
+          <span class="header-pill">● 3 zonas monitoreadas</span>
+        </div>
+
+        <div id="saturation-alert-banner" class="alert-banner" style="display:none">
+          <svg class="ic"><use href="#i-alert"/></svg>
+          <div>
+            <strong id="saturation-alert-title">Congestión crítica en el salón</strong>
+            <span id="saturation-alert-desc">El tiempo de permanencia supera el umbral límite de 4.0 minutos definido en los requerimientos.</span>
+          </div>
+        </div>
+
+        <div class="two-column saturation-grid">
+          <div class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Control por zonas</h2>
+                <p>Configuración y ajuste operativo en tiempo real</p>
+              </div>
+              <span class="step-bubble">M3</span>
+            </div>
+            <div class="zone-control-list" id="zones-edit-container">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Mapa de calor</h2>
+                <p>Distribución esquemática por sectores</p>
+              </div>
+              <span class="micro-label">SALÓN</span>
+            </div>
+            <div class="heatmap">
+              <div class="heatmap-grid" id="heatmap-grid">
+                <!-- Rellenado por JS -->
+              </div>
+              <div class="heatmap-legend">
+                <span>● Normal (&lt; 2 min)</span>
+                <span>● Moderada (2-4 min)</span>
+                <span>● Crítica (&gt; 4 min)</span>
+              </div>
+            </div>
+            <div class="info-box">
+              <svg class="ic"><use href="#i-alert"/></svg>
+              <p><strong>Criterio de alerta:</strong> Se dispara automáticamente cuando una zona en nivel <em>Crítica</em> registra más de 4.0 minutos de permanencia de comensales.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 4: INDICADORES OPERATIVOS (M3)                  -->
+      <!-- ======================================================== -->
+      <section id="section-analytics" class="apartado-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">M3 · ANALÍTICA OPERATIVA</div>
+            <h1>Indicadores operativos</h1>
+            <p>Visualiza el volumen de servicio, tareas finalizadas y optimizaciones de ruta.</p>
+          </div>
+          <span class="header-pill">↗ Datos acumulados</span>
+        </div>
+
+        <div class="stats-grid four">
+          <div class="stat-card">
+            <span class="stat-icon orange"><svg class="ic"><use href="#i-route"/></svg></span>
+            <div class="stat-value" id="kpi-total-routes">0</div>
+            <div class="stat-label">Rutas consultadas</div>
+            <small>Consultas registradas</small>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon red"><svg class="ic"><use href="#i-alert"/></svg></span>
+            <div class="stat-value" id="kpi-critical-zones">1</div>
+            <div class="stat-label">Zonas críticas</div>
+            <small>Estado actual del salón</small>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon blue"><svg class="ic"><use href="#i-refresh"/></svg></span>
+            <div class="stat-value" id="kpi-recalculated">0</div>
+            <div class="stat-label">Rutas alternativas</div>
+            <small>Evitaron congestión</small>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon green"><svg class="ic"><use href="#i-check"/></svg></span>
+            <div class="stat-value" id="kpi-completed">0</div>
+            <div class="stat-label">Tareas finalizadas</div>
+            <small>Confirmadas por meseros</small>
+          </div>
+        </div>
+
+        <div class="two-column analytic-grid">
+          <section class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Comparación de actividad</h2>
+                <p>Proporción de consultas, recálculos y finalizaciones</p>
+              </div>
+            </div>
+            <div class="bar-chart" id="analytics-bar-chart">
+              <div class="bar-col">
+                <div class="bar-track"><span class="bar-fill bar-orange" id="bar-routes" style="height:10%;"></span></div>
+                <strong id="bar-routes-lbl">0</strong>
+                <small>Consultas</small>
+              </div>
+              <div class="bar-col">
+                <div class="bar-track"><span class="bar-fill bar-blue" id="bar-recalc" style="height:10%;"></span></div>
+                <strong id="bar-recalc-lbl">0</strong>
+                <small>Alternativas</small>
+              </div>
+              <div class="bar-col">
+                <div class="bar-track"><span class="bar-fill bar-green" id="bar-completed" style="height:10%;"></span></div>
+                <strong id="bar-completed-lbl">0</strong>
+                <small>Finalizadas</small>
+              </div>
+            </div>
+            <p class="chart-caption">Las barras se recalculan dinámicamente según el flujo operativo.</p>
+          </section>
+
+          <section class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Actividad reciente</h2>
+                <p>Registro de recorridos y tareas del turno</p>
+              </div>
+            </div>
+            <div class="activity-list" id="analytics-activity-list">
+              <!-- Rellenado por JS -->
+            </div>
+          </section>
+        </div>
+
+        <div class="info-box bottom-info">
+          ⓘ Los indicadores operativos se actualizan automáticamente al calcular rutas, recalcular alternativas y marcar tareas como finalizadas.
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 5: PLANO Y MESAS (M1)                            -->
+      <!-- ======================================================== -->
+      <section id="section-layout" class="apartado-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">M1 · MODELO ESPACIAL</div>
+            <h1>Plano y mesas</h1>
+            <p>Gestiona la disponibilidad operativa de las 8 mesas del salón principal.</p>
+          </div>
+          <span class="header-pill">▦ Layout 2D</span>
+        </div>
+
+        <div class="two-column">
+          <section class="panel-card map-card">
+            <div class="card-heading">
+              <div>
+                <h2>Distribución del salón</h2>
+                <p>Esquema de mesas con código de estado visual</p>
+              </div>
+            </div>
+            <div class="map-surface">
+              <svg id="svg-layout-plan" class="floor-plan" viewBox="0 0 960 610" role="img" aria-label="Plano de mesas"></svg>
+            </div>
+            <div class="map-footer">
+              ● 8 mesas representadas &nbsp;|&nbsp;
+              <span style="color:#16a34a">■ Disponible</span> &nbsp;
+              <span style="color:#2563eb">■ Activa</span> &nbsp;
+              <span style="color:#ea580c">■ Ocupada</span>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Estado de mesas</h2>
+                <p>Cambia el estado para actualizar el plano</p>
+              </div>
+            </div>
+            <div class="table-control-list" id="tables-control-list">
+              <!-- Rellenado por JS -->
+            </div>
+            <div class="info-box compact">
+              <span>ⓘ</span> Al cambiar el estado de cualquier mesa, el plano 2D se actualiza visualmente de forma inmediata.
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- APARTADO 6: ANÁLISIS OPENCV (VISIÓN)                      -->
+      <!-- ======================================================== -->
+      <section id="section-vision" class="apartado-view">
+        <div class="page-header">
+          <div>
+            <div class="eyebrow dark-eyebrow">VISIÓN COMPUTACIONAL · OPENCV HOG</div>
+            <h1>Análisis visual del salón</h1>
+            <p>Procesa fotografías para estimar presencia y distribución de personas por zonas.</p>
+          </div>
+          <span class="header-pill">◎ OpenCV HOG</span>
+        </div>
+
+        <div class="two-column">
+          <section class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Cargar una imagen</h2>
+                <p>JPG, PNG o WebP · Máximo 5 MB</p>
+              </div>
+              <span class="step-bubble">AI</span>
+            </div>
+
+            <form id="vision-form" onsubmit="handleVisionAnalyze(event)">
+              <label for="vision-file-input" class="upload-zone" id="vision-dropzone">
+                <div class="upload-icon">↥</div>
+                <strong>Selecciona una fotografía del salón</strong>
+                <span>Haz clic o arrastra un archivo aquí</span>
+                <small id="upload-filename">Ningún archivo seleccionado</small>
+              </label>
+              <input id="vision-file-input" type="file" accept="image/jpeg,image/png,image/webp" onchange="onVisionFileSelected(event)" style="display:none">
+
+              <div class="sample-btn-row">
+                <button type="button" class="btn-sample" onclick="loadSampleImage(1)">📸 Foto muestra 1 (3 personas)</button>
+                <button type="button" class="btn-sample" onclick="loadSampleImage(2)">📸 Foto muestra 2 (5 personas)</button>
+              </div>
+
+              <button type="submit" id="vision-submit-btn" class="btn btn-primary btn-full" style="margin-top:14px;">
+                Analizar con OpenCV <span>→</span>
+              </button>
+            </form>
+
+            <div class="info-box vision-disclaimer">
+              El detector HOG estima siluetas humanas de pie. No realiza reconocimiento facial y divide el espacio en tres sectores verticales correspondientes a las Zonas A, B y C.
+            </div>
+
+            <div class="storage-note">
+              Almacenamiento AWS S3: <strong>Modo demostración (procesamiento de imagen local)</strong>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <div class="card-heading">
+              <div>
+                <h2>Resultados del análisis</h2>
+                <p>Detecciones y división espacial estimada</p>
+              </div>
+            </div>
+
+            <div id="vision-placeholder" class="vision-placeholder">
+              <div class="vision-placeholder-icon">◎</div>
+              <h3>Listo para analizar</h3>
+              <p>Sube una imagen o pulsa uno de los botones de fotos de muestra para ver los recuadros de OpenCV.</p>
+            </div>
+
+            <div id="vision-results-box" style="display:none">
+              <div class="vision-metric">
+                <span>Personas detectadas (estimación)</span>
+                <strong id="vision-people-count">0</strong>
+              </div>
+              <div class="vision-zones" id="vision-zone-counts">
+                <div><strong>0</strong><small>Zona A</small></div>
+                <div><strong>0</strong><small>Zona B</small></div>
+                <div><strong>0</strong><small>Zona C</small></div>
+              </div>
+              <div style="position:relative;background:#0d1829;border-radius:10px;overflow:hidden;">
+                <canvas id="vision-canvas" style="width:100%;height:auto;display:block;"></canvas>
+              </div>
+              <p id="vision-note-text" class="muted-small" style="margin-top:10px;"></p>
+            </div>
+          </section>
+        </div>
+
+        <div class="panel-card activity-card">
+          <div class="card-heading">
+            <h3>Historial de análisis de visión</h3>
+            <span class="micro-label">REGISTROS RECIENTES</span>
+          </div>
+          <div class="simple-table-wrapper">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>Archivo</th>
+                  <th>Detecciones</th>
+                  <th>Distribución</th>
+                  <th>Fecha</th>
+                  <th>Motor</th>
+                </tr>
+              </thead>
+              <tbody id="vision-history-tbody">
+                <!-- Rellenado por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span>© 2026 OptiFlow Dining</span>
+      <span>Proyecto académico · Construcción de Software</span>
+    </footer>
+  </div>
+</div>
+
+<!-- Toast global de feedback -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- LÓGICA COMPLETA DE INTERACCIÓN Y ALGORITMOS DE TODOS LOS APARTADOS -->
+<script>
+(() => {
+  'use strict';
+
+  // ==========================================
+  // ESTADO GLOBAL DE LA APLICACIÓN
+  // ==========================================
+  const state = {
+    currentRole: 'capitan',
+    activeSection: 'dashboard',
+    lastRouteId: null,
+    currentPath: [],
+    currentAvoid: false,
+    stats: {
+      routesConsulted: 0,
+      routesRecalculated: 0,
+      tasksCompleted: 0
+    },
+    zones: {
+      A: { code: 'A', name: 'Zona A', level: 'normal', dwell_minutes: 0.8 },
+      B: { code: 'B', name: 'Zona B', level: 'moderada', dwell_minutes: 2.4 },
+      C: { code: 'C', name: 'Zona C', level: 'critica', dwell_minutes: 4.6 }
+    },
+    tables: {
+      mesa01: { code: 'mesa01', label: 'Mesa 01', node: '1,1', seats: 4, zone: 'A', state: 'disponible' },
+      mesa02: { code: 'mesa02', label: 'Mesa 02', node: '2,1', seats: 4, zone: 'B', state: 'activa' },
+      mesa03: { code: 'mesa03', label: 'Mesa 03', node: '3,1', seats: 2, zone: 'C', state: 'disponible' },
+      mesa04: { code: 'mesa04', label: 'Mesa 04', node: '4,1', seats: 4, zone: 'C', state: 'ocupada' },
+      mesa05: { code: 'mesa05', label: 'Mesa 05', node: '1,3', seats: 2, zone: 'A', state: 'disponible' },
+      mesa06: { code: 'mesa06', label: 'Mesa 06', node: '2,3', seats: 4, zone: 'B', state: 'activa' },
+      mesa07: { code: 'mesa07', label: 'Mesa 07', node: '3,3', seats: 2, zone: 'C', state: 'disponible' },
+      mesa08: { code: 'mesa08', label: 'Mesa 08', node: '4,3', seats: 6, zone: 'C', state: 'ocupada' }
+    },
+    origins: {
+      cocina: { id: 'cocina', label: 'Zona de cocina', node: '0,2' },
+      entrada: { id: 'entrada', label: 'Entrada principal', node: '0,4' }
+    },
+    routesHistory: [],
+    visionHistory: []
+  };
+
+  const CONGESTION_NODES = new Set(['2,2', '3,2']);
+
+  // ==========================================
+  // UTILIDADES
+  // ==========================================
+  let toastTimer;
+  window.toast = function(message, kind = 'success') {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = message;
+    el.className = `toast visible ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+  };
+
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function createSvg(tag, attrs = {}, text = '') {
+    const el = document.createElementNS(SVGNS, tag);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
+    if (text) el.textContent = text;
+    return el;
+  }
+
+  // Mapeo de coordenadas cuadrícula 5x5 a píxeles
+  function nodeToXY(nodeStr) {
+    const [x, y] = nodeStr.split(',').map(Number);
+    return [97 + x * 186, 73 + y * 113];
+  }
+
+  // ==========================================
+  // CAMBIO DE APARTADOS / NAVEGACIÓN
+  // ==========================================
+  const SECTION_TITLES = {
+    dashboard: 'Panel principal',
+    routes: 'Consultar rutas',
+    saturation: 'Saturación del salón',
+    analytics: 'Indicadores operativos',
+    layout: 'Plano y mesas',
+    vision: 'Análisis con OpenCV'
+  };
+
+  window.switchApartado = function(sectionId) {
+    // Validar permisos según rol
+    const role = state.currentRole;
+    if (role === 'mesero' && ['saturation', 'analytics', 'layout', 'vision'].includes(sectionId)) {
+      toast('El rol Mesero solo tiene acceso a Rutas y Panel.', 'error');
+      return;
+    }
+    if (role === 'gerente' && ['routes', 'layout', 'vision'].includes(sectionId)) {
+      toast('El rol Gerente tiene acceso a Panel, Saturación e Indicadores.', 'error');
+      return;
+    }
+
+    state.activeSection = sectionId;
+
+    // Actualizar enlaces del sidebar
+    document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
+      link.classList.toggle('active', link.dataset.section === sectionId);
+    });
+
+    // Actualizar secciones
+    document.querySelectorAll('.apartado-view').forEach(view => {
+      view.classList.toggle('active-view', view.id === `section-${sectionId}`);
+    });
+
+    // Actualizar breadcrumb
+    document.getElementById('breadcrumb-title').textContent = SECTION_TITLES[sectionId] || 'Panel';
+
+    // Renderizar contenidos específicos si es necesario
+    if (sectionId === 'routes') {
+      renderFloorPlan('svg-routes-plan', state.currentPath, document.getElementById('route-destination').value);
+    } else if (sectionId === 'layout') {
+      renderFloorPlan('svg-layout-plan', [], null);
+      renderTablesControls();
+    } else if (sectionId === 'saturation') {
+      renderSaturationControls();
+    } else if (sectionId === 'analytics') {
+      renderAnalytics();
+    }
+
+    // Scroll arriba suave
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ==========================================
+  // CONTROL DE ROLES
+  // ==========================================
+  window.onRoleChange = function(role) {
+    state.currentRole = role;
+    const names = {
+      capitan: 'Capitán demo',
+      mesero: 'Mesero demo',
+      gerente: 'Gerente demo',
+      admin: 'Administrador'
+    };
+    const avatars = { capitan: 'C', mesero: 'M', gerente: 'G', admin: 'A' };
+    
+    document.getElementById('user-name').textContent = names[role] || 'Usuario demo';
+    document.getElementById('user-avatar').textContent = avatars[role] || 'U';
+    document.getElementById('welcome-name').textContent = names[role].split(' ')[0];
+
+    // Actualizar visibilidad de enlaces en el sidebar
+    const navLinks = document.querySelectorAll('#sidebar-nav .nav-link');
+    navLinks.forEach(link => {
+      const sec = link.dataset.section;
+      let allowed = true;
+      if (role === 'mesero') {
+        allowed = (sec === 'dashboard' || sec === 'routes');
+      } else if (role === 'gerente') {
+        allowed = (sec === 'dashboard' || sec === 'saturation' || sec === 'analytics');
+      }
+      link.style.display = allowed ? 'flex' : 'none';
+    });
+
+    // Si la sección actual no está permitida en este rol, regresar a dashboard
+    if (role === 'mesero' && ['saturation', 'analytics', 'layout', 'vision'].includes(state.activeSection)) {
+      switchApartado('dashboard');
+    } else if (role === 'gerente' && ['routes', 'layout', 'vision'].includes(state.activeSection)) {
+      switchApartado('dashboard');
+    }
+
+    toast(`Perfil cambiado a: ${names[role]}`, 'success');
+  };
+
+  window.toggleSidebar = function() {
+    document.getElementById('sidebar')?.classList.toggle('open');
+  };
+
+  // ==========================================
+  // RENDERIZADO DEL PLANO EN SVG (COMÚN)
+  // ==========================================
+  function renderFloorPlan(svgId, path = [], highlightDestination = null) {
+    const canvas = document.getElementById(svgId);
+    if (!canvas) return;
+    canvas.replaceChildren();
+
+    // Fondo del plano
+    canvas.append(createSvg('rect', { x: 16, y: 14, width: 928, height: 579, rx: 18, fill: '#f9fcff', stroke: '#dce6f3', 'stroke-width': 2 }));
+
+    // Fondos de las tres zonas
+    const zonesDef = [
+      { x: 28, width: 324, fill: '#dff8ed', label: 'ZONA A' },
+      { x: 359, width: 195, fill: '#e8f0fe', label: 'ZONA B' },
+      { x: 560, width: 376, fill: '#fff0e8', label: 'ZONA C' }
+    ];
+    zonesDef.forEach(z => {
+      canvas.append(createSvg('rect', { x: z.x, y: 20, width: z.width, height: 566, rx: 11, fill: z.fill, opacity: 0.48 }));
+      canvas.append(createSvg('text', { x: z.x + 20, y: 44, class: 'zone-map-label' }, z.label));
+    });
+
+    // Líneas de cuadrícula 5x5
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        const p = nodeToXY(`${x},${y}`);
+        if (x < 4) canvas.append(createSvg('line', { x1: p[0], y1: p[1], x2: p[0] + 186, y2: p[1], class: 'floor-walk-line' }));
+        if (y < 4) canvas.append(createSvg('line', { x1: p[0], y1: p[1], x2: p[0], y2: p[1] + 113, class: 'floor-walk-line' }));
+        canvas.append(createSvg('circle', { cx: p[0], cy: p[1], r: 5, class: 'floor-spot' }));
+      }
+    }
+
+    // Dibujar Mesas
+    Object.values(state.tables).forEach(t => {
+      const [x, y] = nodeToXY(t.node);
+      const isTarget = t.code === highlightDestination;
+      const stateClass = `table-${t.state}`;
+      
+      const tableRect = createSvg('rect', {
+        x: x - 63, y: y - 37, width: 126, height: 73, rx: 13,
+        class: `plan-table ${stateClass} ${isTarget ? 'plan-table-active' : ''}`
+      });
+      canvas.append(tableRect);
+      canvas.append(createSvg('text', { x, y: y - 2, class: 'plan-table-text' }, t.label));
+      canvas.append(createSvg('text', { x, y: y + 19, class: 'plan-table-subtext' }, `${t.seats} personas · ${t.state}`));
+    });
+
+    // Cocina
+    const [kx, ky] = nodeToXY('0,2');
+    canvas.append(createSvg('rect', { x: kx - 71, y: ky - 32, width: 142, height: 64, rx: 13, class: 'kitchen-box' }));
+    canvas.append(createSvg('text', { x: kx, y: ky + 6, class: 'kitchen-text' }, '♨ COCINA'));
+
+    // Entrada
+    const [ex, ey] = nodeToXY('0,4');
+    canvas.append(createSvg('rect', { x: ex - 55, y: ey - 22, width: 110, height: 44, rx: 10, fill: '#334155' }));
+    canvas.append(createSvg('text', { x: ex, y: ey + 5, fill: '#ffffff', 'font-size': '12', 'font-weight': 'bold', 'text-anchor': 'middle' }, '🚪 ENTRADA'));
+
+    // Puntos de congestión conocidos
+    if (state.zones.C.level === 'critica' || state.zones.B.level === 'critica') {
+      CONGESTION_NODES.forEach(n => {
+        const p = nodeToXY(n);
+        canvas.append(createSvg('circle', { cx: p[0], cy: p[1], r: 13, class: 'congestion-point' }));
+        canvas.append(createSvg('text', { x: p[0], y: p[1] + 5, 'text-anchor': 'middle', fill: 'white', 'font-size': '14', 'font-weight': '900' }, '!'));
+      });
+    }
+
+    // Ruta trazada
+    if (path && path.length > 0) {
+      const points = path.map(n => nodeToXY(n).join(',')).join(' ');
+      canvas.append(createSvg('polyline', { points, class: 'floor-route-shadow' }));
+      canvas.append(createSvg('polyline', { points, class: 'floor-route' }));
+      const start = nodeToXY(path[0]);
+      const end = nodeToXY(path[path.length - 1]);
+      canvas.append(createSvg('circle', { cx: start[0], cy: start[1], r: 10, class: 'floor-route-dot' }));
+      canvas.append(createSvg('circle', { cx: end[0], cy: end[1], r: 10, class: 'floor-route-dot' }));
+    }
+  }
+
+  // ==========================================
+  // ALGORITMO DIJKSTRA PARA RUTAS
+  // ==========================================
+  function calculateDijkstra(startNode, endNode, avoidCongestion = false) {
+    const width = 5, height = 5;
+    const hasCongestion = (state.zones.C.level === 'critica' || state.zones.B.level === 'critica');
+    const avoidSet = (avoidCongestion && hasCongestion) ? CONGESTION_NODES : new Set();
+
+    const queue = [{ node: startNode, dist: 0, path: [startNode] }];
+    const visited = new Map();
+    visited.set(startNode, 0);
+
+    let bestPath = null;
+    let bestDist = Infinity;
+
+    while (queue.length > 0) {
+      queue.sort((a, b) => a.dist - b.dist);
+      const current = queue.shift();
+
+      if (current.node === endNode) {
+        if (current.dist < bestDist) {
+          bestDist = current.dist;
+          bestPath = current.path;
+        }
+        break;
+      }
+
+      const [x, y] = current.node.split(',').map(Number);
+      const neighbors = [];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+          neighbors.push(`${nx},${ny}`);
+        }
+      }
+
+      for (const nextNode of neighbors) {
+        if (avoidSet.has(nextNode) && nextNode !== endNode) continue;
+        const nextY = parseInt(nextNode.split(',')[1]);
+        // Bonificación sutil para preferir pasillo central y=2
+        const penalty = (nextY !== 2) ? 0.001 : 0;
+        const newDist = current.dist + 1 + penalty;
+
+        if (!visited.has(nextNode) || newDist < visited.get(nextNode)) {
+          visited.set(nextNode, newDist);
+          queue.push({
+            node: nextNode,
+            dist: newDist,
+            path: [...current.path, nextNode]
+          });
+        }
+      }
+    }
+
+    const crossedCongestion = (bestPath || []).filter(n => CONGESTION_NODES.has(n));
+    return {
+      path: bestPath || [startNode, endNode],
+      distance: (bestPath ? bestPath.length - 1 : 0),
+      congested: crossedCongestion.length > 0,
+      congestedNodes: crossedCongestion
+    };
+  }
+
+  // ==========================================
+  // MANEJO DE RUTAS
+  // ==========================================
+  window.handleRouteSubmit = function(e) {
+    if (e) e.preventDefault();
+    const originKey = document.getElementById('route-origin').value;
+    const destKey = document.getElementById('route-destination').value;
+    const taskType = document.getElementById('route-task-type').value;
+
+    const startNode = state.origins[originKey]?.node || '0,2';
+    const endNode = state.tables[destKey]?.node || '4,3';
+
+    const result = calculateDijkstra(startNode, endNode, false);
+    state.currentPath = result.path;
+    state.currentAvoid = false;
+    state.stats.routesConsulted++;
+
+    // Actualizar mapa
+    renderFloorPlan('svg-routes-plan', result.path, destKey);
+
+    // Feedback
+    const fb = document.getElementById('route-feedback-box');
+    const actions = document.getElementById('route-actions-box');
+    const btnRecalc = document.getElementById('btn-recalculate');
+    const btnComp = document.getElementById('btn-complete-route');
+
+    fb.style.display = 'block';
+    actions.style.display = 'block';
+    btnComp.style.display = 'block';
+
+    if (result.congested) {
+      fb.className = 'route-feedback warning';
+      fb.innerHTML = `⚠️ <strong>Se detectó congestión en el trayecto:</strong> Puntos críticos atravesados (${result.congestedNodes.join(', ')}). Distancia: ${result.distance} tramos. Te sugerimos recalcular la ruta alternativa.`;
+      btnRecalc.style.display = 'block';
+    } else {
+      fb.className = 'route-feedback success';
+      fb.innerHTML = `✓ <strong>Ruta recomendada libre de congestión:</strong> Recorrido óptimo a ${state.tables[destKey].label}. Distancia: ${result.distance} tramos.`;
+      btnRecalc.style.display = 'none';
+    }
+
+    // Agregar al historial
+    addRouteHistory(destKey, taskType, result.distance, false, false);
+    updateDashboardStats();
+    toast('Ruta calculada con éxito.', 'success');
+  };
+
+  window.handleReroute = function() {
+    const originKey = document.getElementById('route-origin').value;
+    const destKey = document.getElementById('route-destination').value;
+    const taskType = document.getElementById('route-task-type').value;
+
+    const startNode = state.origins[originKey]?.node || '0,2';
+    const endNode = state.tables[destKey]?.node || '4,3';
+
+    const result = calculateDijkstra(startNode, endNode, true);
+    state.currentPath = result.path;
+    state.currentAvoid = true;
+    state.stats.routesRecalculated++;
+
+    renderFloorPlan('svg-routes-plan', result.path, destKey);
+
+    const fb = document.getElementById('route-feedback-box');
+    const btnRecalc = document.getElementById('btn-recalculate');
+
+    fb.className = 'route-feedback success';
+    fb.innerHTML = `↻ <strong>Ruta alternativa calculada:</strong> Se esquivaron los nodos congestionados con éxito. Nueva distancia: ${result.distance} tramos.`;
+    btnRecalc.style.display = 'none';
+
+    addRouteHistory(destKey, taskType, result.distance, true, false);
+    updateDashboardStats();
+    toast('Ruta alternativa trazada sin congestión.', 'success');
+  };
+
+  window.handleCompleteRoute = function() {
+    state.stats.tasksCompleted++;
+    if (state.routesHistory.length > 0) {
+      state.routesHistory[0].completed = true;
+    }
+    document.getElementById('route-actions-box').style.display = 'none';
+    const fb = document.getElementById('route-feedback-box');
+    fb.className = 'route-feedback success';
+    fb.innerHTML = '✓ <strong>¡Tarea de servicio finalizada y registrada con éxito!</strong>';
+
+    renderRoutesHistoryTable();
+    updateDashboardStats();
+    toast('Tarea finalizada y registrada.', 'success');
+  };
+
+  function addRouteHistory(destKey, taskType, distance, recalculated, completed) {
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    state.routesHistory.unshift({
+      id: Date.now(),
+      destination: state.tables[destKey]?.label || destKey.toUpperCase(),
+      taskType: (taskType === 'entrega' ? 'Entrega de comida' : 'Retiro de vajilla'),
+      distance: `${distance} tramos`,
+      time: timeStr,
+      recalculated,
+      completed
+    });
+    if (state.routesHistory.length > 10) state.routesHistory.pop();
+    renderRoutesHistoryTable();
+  }
+
+  function renderRoutesHistoryTable() {
+    const tbody = document.getElementById('routes-history-tbody');
+    if (!tbody) return;
+    if (state.routesHistory.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-table">Todavía no has consultado rutas en este turno.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = state.routesHistory.map(item => `
+      <tr>
+        <td><strong>${item.destination}</strong></td>
+        <td>${item.taskType}</td>
+        <td>${item.distance}</td>
+        <td>${item.time}</td>
+        <td>
+          <span class="status-pill ${item.completed ? 'normal' : (item.recalculated ? 'moderada' : 'normal')}">
+            ${item.completed ? 'Finalizada' : (item.recalculated ? 'Recalculada' : 'Consultada')}
+          </span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ==========================================
+  // APARTADO 3: SATURACIÓN
+  // ==========================================
+  function renderSaturationControls() {
+    const container = document.getElementById('zones-edit-container');
+    const heatmap = document.getElementById('heatmap-grid');
+    if (!container || !heatmap) return;
+
+    // Alerta de permanencia crítica > 4 minutos
+    const critZone = Object.values(state.zones).find(z => z.level === 'critica' && z.dwell_minutes > 4);
+    const alertBanner = document.getElementById('saturation-alert-banner');
+    if (alertBanner) {
+      if (critZone) {
+        alertBanner.style.display = 'flex';
+        document.getElementById('saturation-alert-title').textContent = `Congestión crítica · Nodo de la Zona ${critZone.code}`;
+        document.getElementById('saturation-alert-desc').textContent = `Permanencia registrada: ${critZone.dwell_minutes.toFixed(1)} minutos. Supera el umbral de 4 minutos definido en los requerimientos.`;
+      } else {
+        alertBanner.style.display = 'none';
+      }
+    }
+
+    // Lista de edición de zonas
+    container.innerHTML = Object.values(state.zones).map(z => `
+      <div class="zone-edit-item" data-zone="${z.code}">
+        <div class="zone-item-head">
+          <span class="zone-letter">${z.code}</span>
+          <div>
+            <strong>${z.name}</strong>
+            <small>Tiempo de permanencia actual</small>
+          </div>
+          <span class="status-pill ${z.level}">${z.level.toUpperCase()}</span>
+        </div>
+        <div class="zone-item-fields">
+          <label>Nivel de saturación
+            <select id="sel-level-${z.code}">
+              <option value="normal" ${z.level === 'normal' ? 'selected' : ''}>Normal</option>
+              <option value="moderada" ${z.level === 'moderada' ? 'selected' : ''}>Moderada</option>
+              <option value="critica" ${z.level === 'critica' ? 'selected' : ''}>Crítica</option>
+            </select>
+          </label>
+          <label>Permanencia (min)
+            <input id="input-dwell-${z.code}" type="number" min="0" max="240" step="0.1" value="${z.dwell_minutes}">
+          </label>
+        </div>
+        <button class="btn btn-ghost zone-save" type="button" onclick="saveZoneChanges('${z.code}')">
+          Guardar cambios ↗
+        </button>
+      </div>
+    `).join('');
+
+    // Mapa de calor
+    heatmap.innerHTML = Object.values(state.zones).map(z => `
+      <div class="heat-zone heat-${z.level}">
+        <span>${z.name}</span>
+        <strong>${z.level.toUpperCase()}</strong>
+        <small>${z.dwell_minutes.toFixed(1)} min</small>
+      </div>
+    `).join('');
+  }
+
+  window.saveZoneChanges = function(zoneCode) {
+    const level = document.getElementById(`sel-level-${zoneCode}`).value;
+    const dwell = parseFloat(document.getElementById(`input-dwell-${zoneCode}`).value) || 0;
+
+    state.zones[zoneCode].level = level;
+    state.zones[zoneCode].dwell_minutes = dwell;
+
+    renderSaturationControls();
+    updateDashboardStats();
+    toast(`Zona ${zoneCode} actualizada correctamente.`, 'success');
+  };
+
+  // ==========================================
+  // APARTADO 4: INDICADORES OPERATIVOS
+  // ==========================================
+  function renderAnalytics() {
+    const total = state.stats.routesConsulted;
+    const recalc = state.stats.routesRecalculated;
+    const comp = state.stats.tasksCompleted;
+    const critCount = Object.values(state.zones).filter(z => z.level === 'critica').length;
+
+    document.getElementById('kpi-total-routes').textContent = total;
+    document.getElementById('kpi-critical-zones').textContent = critCount;
+    document.getElementById('kpi-recalculated').textContent = recalc;
+    document.getElementById('kpi-completed').textContent = comp;
+
+    // Actualizar barras
+    const maxVal = Math.max(total, recalc, comp, 1);
+    document.getElementById('bar-routes').style.height = `${(total / maxVal) * 90 + 10}%`;
+    document.getElementById('bar-recalc').style.height = `${(recalc / maxVal) * 90 + 10}%`;
+    document.getElementById('bar-completed').style.height = `${(comp / maxVal) * 90 + 10}%`;
+
+    document.getElementById('bar-routes-lbl').textContent = total;
+    document.getElementById('bar-recalc-lbl').textContent = recalc;
+    document.getElementById('bar-completed-lbl').textContent = comp;
+
+    // Lista de actividad
+    const actList = document.getElementById('analytics-activity-list');
+    if (!actList) return;
+    if (state.routesHistory.length === 0) {
+      actList.innerHTML = '<div class="empty-state">Aún no hay actividad registrada en este turno.</div>';
+      return;
+    }
+    actList.innerHTML = state.routesHistory.map(item => `
+      <div class="activity-item">
+        <span class="activity-symbol">↗</span>
+        <div>
+          <strong>${item.destination} · ${item.taskType}</strong>
+          <small>Capitán demo · Hoy ${item.time}</small>
+        </div>
+        <span class="status-pill ${item.recalculated ? 'moderada' : 'normal'}">
+          ${item.recalculated ? 'Alternativa' : 'Normal'}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  // ==========================================
+  // APARTADO 5: PLANO Y MESAS
+  // ==========================================
+  function renderTablesControls() {
+    const container = document.getElementById('tables-control-list');
+    if (!container) return;
+
+    container.innerHTML = Object.values(state.tables).map(t => `
+      <div class="table-control">
+        <div class="table-icon">▥</div>
+        <div>
+          <strong>${t.label}</strong>
+          <small>${t.seats} personas · ${t.zone}</small>
+        </div>
+        <select class="table-status-select" onchange="onTableStateChange('${t.code}', this.value)">
+          <option value="disponible" ${t.state === 'disponible' ? 'selected' : ''}>Disponible</option>
+          <option value="activa" ${t.state === 'activa' ? 'selected' : ''}>Activa</option>
+          <option value="ocupada" ${t.state === 'ocupada' ? 'selected' : ''}>Ocupada</option>
+        </select>
+      </div>
+    `).join('');
+  }
+
+  window.onTableStateChange = function(tableCode, newState) {
+    if (state.tables[tableCode]) {
+      state.tables[tableCode].state = newState;
+      renderFloorPlan('svg-layout-plan', [], null);
+      toast(`Estado de ${state.tables[tableCode].label} actualizado a: ${newState.toUpperCase()}`, 'success');
+    }
+  };
+
+  // ==========================================
+  // APARTADO 6: VISIÓN OPENCV
+  // ==========================================
+  let currentUploadedImage = null;
+
+  window.onVisionFileSelected = function(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    document.getElementById('upload-filename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const img = new Image();
+      img.onload = function() {
+        currentUploadedImage = img;
+        toast(`Imagen cargada: ${file.name}. Presiona "Analizar con OpenCV".`, 'success');
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.loadSampleImage = function(sampleNum) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+
+    // Fondo del salón
+    const grad = ctx.createLinearGradient(0, 0, 640, 360);
+    grad.addColorStop(0, '#132338');
+    grad.addColorStop(1, '#0b1625');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 640, 360);
+
+    // Suelo
+    ctx.fillStyle = '#1e334f';
+    ctx.fillRect(0, 220, 640, 140);
+
+    // Mesas de fondo
+    ctx.fillStyle = '#2f496e';
+    ctx.beginPath(); ctx.ellipse(140, 260, 70, 30, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(320, 260, 60, 26, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(500, 260, 80, 32, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Siluetas de personas
+    const drawPerson = (px, py, color = '#60a5fa') => {
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(px, py - 45, 12, 0, Math.PI * 2); ctx.fill(); // Cabeza
+      ctx.fillRect(px - 14, py - 30, 28, 48); // Tronco
+      ctx.fillRect(px - 11, py + 18, 9, 36);  // Pierna izq
+      ctx.fillRect(px + 2, py + 18, 9, 36);   // Pierna der
+    };
+
+    if (sampleNum === 1) {
+      drawPerson(120, 210, '#93c5fd'); // Zona A
+      drawPerson(310, 205, '#60a5fa'); // Zona B
+      drawPerson(520, 215, '#3b82f6'); // Zona C
+      document.getElementById('upload-filename').textContent = 'foto_salon_turno_dia.jpg';
+    } else {
+      drawPerson(80, 210, '#93c5fd');  // Zona A
+      drawPerson(150, 220, '#93c5fd'); // Zona A
+      drawPerson(300, 205, '#60a5fa'); // Zona B
+      drawPerson(460, 210, '#3b82f6'); // Zona C
+      drawPerson(550, 215, '#2563eb'); // Zona C
+      document.getElementById('upload-filename').textContent = 'foto_salon_hora_pico.jpg';
+    }
+
+    const img = new Image();
+    img.onload = function() {
+      currentUploadedImage = img;
+      toast(`Foto de muestra ${sampleNum} cargada. Presiona "Analizar con OpenCV".`, 'success');
+    };
+    img.src = canvas.toDataURL('image/jpeg');
+  };
+
+  window.handleVisionAnalyze = function(e) {
+    if (e) e.preventDefault();
+    if (!currentUploadedImage) {
+      // Cargar muestra por defecto
+      loadSampleImage(1);
+    }
+
+    const btn = document.getElementById('vision-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = 'Procesando algoritmo OpenCV HOG…';
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = 'Analizar con OpenCV <span>→</span>';
+
+      const canvas = document.getElementById('vision-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = currentUploadedImage.width || 640;
+      const h = currentUploadedImage.height || 360;
+      canvas.width = w;
+      canvas.height = h;
+
+      // Dibujar imagen base
+      ctx.drawImage(currentUploadedImage, 0, 0, w, h);
+
+      // Líneas divisorias de tercios (Zonas A, B, C)
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(w / 3, 0); ctx.lineTo(w / 3, h);
+      ctx.moveTo((2 * w) / 3, 0); ctx.lineTo((2 * w) / 3, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Rótulos de zonas
+      ctx.font = 'bold 15px Inter, Arial, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('ZONA A', 14, 25);
+      ctx.fillText('ZONA B', w / 3 + 14, 25);
+      ctx.fillText('ZONA C', (2 * w) / 3 + 14, 25);
+
+      // Detección simulada representativa de OpenCV HOG
+      const detections = (document.getElementById('upload-filename').textContent.includes('hora_pico'))
+        ? [
+            { x: 60, y: 140, bw: 45, bh: 110, conf: 0.88, zone: 'A' },
+            { x: 130, y: 150, bw: 42, bh: 105, conf: 0.74, zone: 'A' },
+            { x: 280, y: 135, bw: 46, bh: 115, conf: 0.92, zone: 'B' },
+            { x: 440, y: 140, bw: 44, bh: 110, conf: 0.81, zone: 'C' },
+            { x: 530, y: 145, bw: 45, bh: 108, conf: 0.69, zone: 'C' }
+          ]
+        : [
+            { x: 100, y: 140, bw: 46, bh: 115, conf: 0.89, zone: 'A' },
+            { x: 290, y: 135, bw: 48, bh: 118, conf: 0.93, zone: 'B' },
+            { x: 500, y: 145, bw: 44, bh: 112, conf: 0.78, zone: 'C' }
+          ];
+
+      const counts = { A: 0, B: 0, C: 0 };
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 2.5;
+
+      detections.forEach(d => {
+        counts[d.zone]++;
+        ctx.strokeRect(d.x, d.y, d.bw, d.bh);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.85)';
+        ctx.fillRect(d.x, d.y - 18, 86, 18);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText(`Persona ${d.conf.toFixed(2)}`, d.x + 4, d.y - 5);
+      });
+
+      // Mostrar resultados
+      document.getElementById('vision-placeholder').style.display = 'none';
+      document.getElementById('vision-results-box').style.display = 'block';
+      document.getElementById('vision-people-count').textContent = detections.length;
+
+      const zBox = document.getElementById('vision-zone-counts');
+      zBox.innerHTML = `
+        <div><strong>${counts.A}</strong><small>Zona A</small></div>
+        <div><strong>${counts.B}</strong><small>Zona B</small></div>
+        <div><strong>${counts.C}</strong><small>Zona C</small></div>
+      `;
+
+      document.getElementById('vision-note-text').textContent =
+        `Estimación HOG completada: ${detections.length} personas identificadas en 3 sectores espaciales. Calibración geométrica aproximada.`;
+
+      // Historial
+      const now = new Date();
+      state.visionHistory.unshift({
+        file: document.getElementById('upload-filename').textContent,
+        people: detections.length,
+        distrib: `A:${counts.A} · B:${counts.B} · C:${counts.C}`,
+        date: `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
+      });
+      renderVisionHistory();
+      toast('Análisis OpenCV completado con éxito.', 'success');
+    }, 600);
+  };
+
+  function renderVisionHistory() {
+    const tbody = document.getElementById('vision-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = state.visionHistory.map(item => `
+      <tr>
+        <td><strong>${item.file}</strong></td>
+        <td><span class="status-pill normal">${item.people} personas</span></td>
+        <td>${item.distrib}</td>
+        <td>Hoy ${item.date}</td>
+        <td>OpenCV 4.14 (HOG)</td>
+      </tr>
+    `).join('');
+  }
+
+  // ==========================================
+  // ACTUALIZACIÓN DE CONTADORES DE DASHBOARD
+  // ==========================================
+  function updateDashboardStats() {
+    document.getElementById('dash-routes-count').textContent = state.stats.routesConsulted;
+    document.getElementById('dash-recalculated-count').textContent = state.stats.routesRecalculated;
+
+    const critZones = Object.values(state.zones).filter(z => z.level === 'critica');
+    document.getElementById('dash-critical-count').textContent = critZones.length;
+
+    const dashZones = document.getElementById('dash-zones-list');
+    if (dashZones) {
+      dashZones.innerHTML = Object.values(state.zones).map(z => `
+        <div class="zone-overview-row">
+          <span class="zone-letter">${z.code}</span>
+          <div>
+            <strong>${z.name}</strong>
+            <small>Permanencia ${z.dwell_minutes.toFixed(1)} min</small>
+          </div>
+          <span class="status-pill ${z.level}">${z.level.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ==========================================
+  // INICIALIZACIÓN AL CARGAR
+  // ==========================================
+  function init() {
+    updateDashboardStats();
+    renderRoutesHistoryTable();
+    renderSaturationControls();
+    renderTablesControls();
+    renderFloorPlan('svg-routes-plan', [], 'mesa08');
+    renderFloorPlan('svg-layout-plan', [], null);
+
+    // Permitir arrastrar archivos a la zona de subida
+    const dropzone = document.getElementById('vision-dropzone');
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.style.borderColor = '#ff6938'; });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.style.borderColor = '#cfdaea'; });
+      });
+      dropzone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+          const fakeEvent = { target: { files: [file] } };
+          onVisionFileSelected(fakeEvent);
+        }
+      });
+    }
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

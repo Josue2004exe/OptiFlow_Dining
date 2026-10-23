@@ -1,0 +1,8 @@
+Django>=5.2,<6.0
+requests>=2.32,<3
+boto3>=1.35,<2
+whitenoise>=6.8,<7
+python-dotenv>=1.0,<2
+gunicorn>=23,<24
+dj-database-url>=2.2,<4
+psycopg[binary]>=3.2,<4
